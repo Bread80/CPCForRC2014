@@ -10,11 +10,11 @@ Portions copyright © Amstrad Consumer Electonics plc and Locomotive Software.
 
 ****
 NOTICE
-This is temporary initial release of the 'pageable ROM' edition. The 512k ROM/RAM still needs tweaking and testing and should be out in a few day
+This is temporary initial release of the 'pageable ROM' edition. The 512k ROM/RAM still needs tweaking and testing and should be out in a few days.
 ****
 
-Contents
----
+# Contents
+
 1. Introduction
 2. Quick Start Guides
     a) Installing: Flat memory model for standard or pageable ROM boards

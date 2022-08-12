@@ -8,6 +8,11 @@ Portions copyright © Stephen C Cousins and used with kind permission - https://
 Portions copyright © Amstrad Consumer Electonics plc and Locomotive Software.
 'RC2014' is a trademark of RC2795 Ltd - https://rc2014.co.uk
 
+****
+NOTICE
+This is temporary initial release of the 'pageable ROM' edition. The 512k ROM/RAM still needs tweaking and testing and should be out in a few day
+****
+
 Contents
 ---
 1. Introduction

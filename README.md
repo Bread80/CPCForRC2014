@@ -38,7 +38,7 @@ Contents
 
 
 1. Introduction
----
+
 CPC For RC2014 is a version of the firmware for an Amstrad CPC which has been adapted to run on an RC2014. This enables 'well behaved' software to run unmodified on the RC2014. 'Well behaved' here refers to software which accesses the machine through the firmware 'jumpblocks'. In particular this enables the Amstrad/Locomotive BASIC to run on an RC2014 with zero modifications needed.
 
 The default CPC For RC2014 software maps keyboard input and text output to use the serial ports of the RC2014. Features which are not available on the majority of RC2014s, such as graphics, sound and cassette I/O have been removed. However hooks have been retained to enable such features to be (re)added should you so wish. This would, presumably, require custom driver software to be written.

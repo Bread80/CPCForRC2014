@@ -7,8 +7,9 @@
    
 STARTUP_entry_point:              ;{{Addr=$0591 Code Calls/jump count: 1 Data use count: 0}}
 
-    ld sp,$c000
+    ld sp,$c000         ;Initialise stack pointer
     
+ifdef blinkenlights
     ld a,1
 blinken_loop:
     out (0),a   ;TEMP - Blinkenlights
@@ -21,6 +22,7 @@ blinken_delay:
     
     rla
     jr nc,blinken_loop
+endif
     
 ifdef k512      ;Initialise memory model for 512K board
     ld a,$25        ;Map a fresh RAM bank into bank 2

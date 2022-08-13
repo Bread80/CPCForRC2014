@@ -5,7 +5,7 @@ CPC For RC2014 is a project to run the firmware from an Amstrad CPC on an RC2014
 
 Initial work done by Mike Sutton - http://bread80.com
 Portions copyright © Stephen C Cousins and used with kind permission - https://smallcomputercentral.wordpress.com/small-computer-monitor/
-Portions copyright © Amstrad Consumer Electonics plc and Locomotive Software.
+Portions copyright © Amstrad Consumer Electronics plc and Locomotive Software.
 'RC2014' is a trademark of RC2795 Ltd - https://rc2014.co.uk
 
 ****

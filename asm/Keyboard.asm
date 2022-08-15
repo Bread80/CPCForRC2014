@@ -883,34 +883,44 @@ serial_to_buffer:
 ;CPC characters.
 ;Input: A character from the serial port
 serial_codes_to_cpc_keys:
-    cp $1b          ;ESCape codes start with <ESC>[
+    cp $1b                  ;ESCape codes start with <ESC>[
     ld hl,char_to_cpc_table  ;Lookup table for regular keys
     jr nz,escape_table_lookup 
 
-    ld bc,$0400     ;Delay for next char of escape sequence
-wait_loop:
+;An escape could be a break char, or the start of an escape sequence.
+;We want to wait and see what the next char is - which will be needed with 
+;slow serial connections - but we don't want to cause too long a delay when
+;processing a discrete break key
+ld bc,$4000                 ;Max iterations to wait for a char
+                            ;This can cope with up to almost 200ms delay (at 
+                            ;standard RC2014 clock speed) without causing an
+                            ;unpleasant delay in break processing.
+    
+esc_wait_loop:
+    call SERIAL_READ
+    jr nz,escape_next_read  ;char read
     dec bc
     ld a,b
     or c
-    jr nz,wait_loop
+    jr nz,esc_wait_loop
+    jr escape_key           ;No more keys in buffer - we have an ESCape key (NOT sequence)
     
-    call SERIAL_READ
-    jr z,escape_key     ;No more keys in buffer - we have an ESCape key (NOT sequence)
-    cp '['          ;ESC followed by [ is an escape sequence
+escape_next_read:
+    cp '['                  ;ESC followed by [ is an escape sequence
     jr z,escape_square_sequence     ;ESC [ x or ESC [ n ~ sequence
     cp 'O'
     jr z,escape_O_sequence          ;ESC O x sequence
     
-    push af         ;Otherwise we have an ESC followed by a normal char
-    call escape_key ;Process the ESCape
+    push af                 ;Otherwise we have an ESC followed by a normal char
+    call escape_key         ;Process the ESCape
     pop af
     jr serial_codes_to_cpc_keys ;Next key could also be an ESC!!
     
-escape_key:         ;ESC (with nothing following it)
-    ld bc,$0408     ;Push an ESCape key into the buffer
+escape_key:                 ;ESC (with nothing following it)
+    ld bc,$0408             ;Push an ESCape key into the buffer
     call push_into_key_buffer
-    call KM_BREAK_EVENT ;Fire the break event (if armed)
-    ld a,$ff        ;Return non-key
+    call KM_BREAK_EVENT     ;Fire the break event (if armed)
+    ld a,$ff                ;Return non-key
     ret
     
 escape_square_sequence:     ;Test for n in ESC[n~
@@ -940,7 +950,7 @@ escape_O_sequence:
     ld hl,escape_O_to_cpc_table
     
 escape_table_lookup:
-    ld b,(hl)       ;No of items in table
+    ld b,(hl)               ;No of items in table
     
 escape_mapping_loop:
     inc hl
@@ -959,37 +969,37 @@ escape_mapping_found:
 
 char_to_cpc_table
 ;Map 'normal' ASCII characters to alternate CPC characters/keys
-defb 2          ;No of entries in table
-defb $8,$7f     ;Backward delete DEL
-defb $7f,$10    ;Forward delete DLE
+defb 2                      ;No of entries in table
+defb $8,$7f                 ;Backward delete DEL
+defb $7f,$10                ;Forward delete DLE
 
 escape_square_to_cpc_table:
 ;Map the x in ESC [ x sequences
-defb 4          ;No of entries in table
-defb 'A',$f0    ;Up
-defb 'B',$f1    ;Down
-defb 'C',$f3    ;Right
-defb 'D',$f2    ;Left
+defb 4                      ;No of entries in table
+defb 'A',$f0                ;Up
+defb 'B',$f1                ;Down
+defb 'C',$f3                ;Right
+defb 'D',$f2                ;Left
     
 escape_tilde_to_cpc_table
 ;Map the n in ESC [ n ~ sequences
-defb 5          ;No of entries in table
-defb '1',$f8    ;1=HOME BEG #F8
-defb '2',$e1    ;2=INSERT/OVERWRITE toggle INS #E1
-defb '4',$f9    ;4=END END #F9
-defb '5',$fa    ;5=PGUP STA #FA
-defb '6',$fb    ;6=PGDN FIN #FB
+defb 5                      ;No of entries in table
+defb '1',$f8                ;1=HOME BEG #F8
+defb '2',$e1                ;2=INSERT/OVERWRITE toggle INS #E1
+defb '4',$f9                ;4=END END #F9
+defb '5',$fa                ;5=PGUP STA #FA
+defb '6',$fb                ;6=PGDN FIN #FB
 
 escape_O_to_cpc_table
 ;Map the x in ESC O x sequences
 ;These could be used to map to the 'expansion tokens' = &80 .. &8C
 ;which are normally CTRL-<numeric keypad> on a CPC. For example,
 ;CTRL-<small enter> maps to &8C which expands to Run"<enter>
-defb 4          ;No of entries in table
-defb 'P',$fe    ;P=NUMLOCK to Shift Lock
-defb 'Q','/'    ;Q=Number pad /
-defb 'R','*'    ;R=Number pad *
-defb 'S','-'    ;S=Number pad -
+defb 4                      ;No of entries in table
+defb 'P',$fe                ;P=NUMLOCK to Shift Lock
+defb 'Q','/'                ;Q=Number pad /
+defb 'R','*'                ;R=Number pad *
+defb 'S','-'                ;S=Number pad -
 
 output_as_hex:
     push af
@@ -1048,7 +1058,7 @@ key_not_found:
 ;       If key not found, A preserved, otherwise A corrupt
 ;       Flags corrupt
 search_key_table:
-    ld b,$51        ;Number of entries in table plus 1
+    ld b,$51                ;Number of entries in table plus 1
     
 skt_table_loop:
     cp a,(hl)
@@ -1057,31 +1067,31 @@ skt_table_loop:
     inc hl
     djnz skt_table_loop
     
-    dec hl      ;No key found
-    or a        ;Clear carry
+    dec hl                  ;No key found
+    or a                    ;Clear carry
     ret
     
 skt_table_key_found:
     ld a,$51
-    sub b       ;Convert counter to index into table
-    ld c,a      ;Cache
+    sub b                   ;Convert counter to index into table
+    ld c,a                  ;Cache
     
-    and 7       ;Mask to column number
-    ld b,a      ;As loop counter
-    ld a,1      ;Convert counter to bit
+    and 7                   ;Mask to column number
+    ld b,a                  ;As loop counter
+    ld a,1                  ;Convert counter to bit
 skt_row_to_bit_loop:
     rlca
     djnz skt_row_to_bit_loop
-    ld b,a      ;Final column data
+    ld b,a                  ;Final column data
     
-    ld a,c      ;Raw index back
+    ld a,c                  ;Raw index back
     rrca
     rrca
-    rrca        ;Row number
-    and $0f     ;Mask unwanted
+    rrca                    ;Row number
+    and $0f                 ;Mask unwanted
     ld c,a
     
-    scf         ;Key found
+    scf                     ;Key found
     ret
     
    

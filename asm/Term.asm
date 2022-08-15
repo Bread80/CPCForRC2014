@@ -75,6 +75,8 @@ term_loop:
     ret nc                  ;No carry = break
     
     ld a,(hl)
+    and a                   ;Empty buffer
+    jr z,term_empty_buffer
     cp '?'
     jr z,term_help
     or $20                  ;Convert to lower case
@@ -84,6 +86,10 @@ term_loop:
     
     ld hl,term_error_message
     call display_a_null_terminated_string 
+    jr term_loop
+    
+term_empty_buffer
+    call performs_control_character_LF_function
     jr term_loop
     
 term_help:
